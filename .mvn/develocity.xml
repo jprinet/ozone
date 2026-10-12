@@ -43,7 +43,7 @@
   </buildScan>
   <buildCache>
     <local>
-      <enabled>#{isFalse(env['GITHUB_ACTIONS'])}</enabled>
+      <enabled>true</enabled>
     </local>
     <remote>
       <enabled>false</enabled>
