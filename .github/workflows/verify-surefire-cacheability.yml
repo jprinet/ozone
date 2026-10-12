@@ -18,9 +18,9 @@ jobs:
       - name: Install modules under test
         run: mvn -B --no-transfer-progress -DskipTests -DskipDocs -DskipRecon -DskipShade -Djacoco.skip -Dscan=false -pl hadoop-hdds/config,hadoop-ozone/integration-test -am install
       - name: Run tests (1st run, populates local build cache)
-        run: mvn -B --no-transfer-progress -X -DskipDocs -DskipRecon -DskipShade -Djacoco.skip -Dscan=false -pl hadoop-hdds/config,hadoop-ozone/integration-test -Dtest='TestStorageSize,TestConfigFileGenerator,TestOzoneConfigurationFields' -Dsurefire.failIfNoSpecifiedTests=false test > run1.log 2>&1 || true
+        run: mvn -B --no-transfer-progress -X -DskipDocs -DskipRecon -DskipShade -Djacoco.skip -Dscan=false -pl hadoop-hdds/config,hadoop-ozone/integration-test -Dtest='TestStorageSize,TestConfigFileGenerator,TestOzoneConfigurationFields' -Dsurefire.failIfNoSpecifiedTests=false clean test > run1.log 2>&1 || true
       - name: Run tests (2nd run, expected FROM-CACHE)
-        run: mvn -B --no-transfer-progress -DskipDocs -DskipRecon -DskipShade -Djacoco.skip -Dscan=false -pl hadoop-hdds/config,hadoop-ozone/integration-test -Dtest='TestStorageSize,TestConfigFileGenerator,TestOzoneConfigurationFields' -Dsurefire.failIfNoSpecifiedTests=false test > run2.log 2>&1 || true
+        run: mvn -B --no-transfer-progress -DskipDocs -DskipRecon -DskipShade -Djacoco.skip -Dscan=false -pl hadoop-hdds/config,hadoop-ozone/integration-test -Dtest='TestStorageSize,TestConfigFileGenerator,TestOzoneConfigurationFields' -Dsurefire.failIfNoSpecifiedTests=false clean test > run2.log 2>&1 || true
       - name: Report
         run: |
           echo "### 1st run: surefire cacheability messages"
