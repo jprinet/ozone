@@ -1,0 +1,31 @@
+# TEMPORARY - verification only, not part of the PR
+name: verify-surefire-cacheability
+on:
+  push:
+    branches: [ 'verify-surefire-cacheability-*' ]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install modules under test
+        run: mvn -B --no-transfer-progress -DskipTests -DskipDocs -DskipRecon -DskipShade -Djacoco.skip -Dscan=false -pl hadoop-hdds/config,hadoop-ozone/integration-test -am install
+      - name: Run tests (1st run, populates local build cache)
+        run: mvn -B --no-transfer-progress -X -DskipDocs -DskipRecon -DskipShade -Djacoco.skip -Dscan=false -pl hadoop-hdds/config,hadoop-ozone/integration-test -Dtest='TestStorageSize,TestConfigFileGenerator,TestOzoneConfigurationFields' -Dsurefire.failIfNoSpecifiedTests=false test > run1.log 2>&1 || true
+      - name: Run tests (2nd run, expected FROM-CACHE)
+        run: mvn -B --no-transfer-progress -DskipDocs -DskipRecon -DskipShade -Djacoco.skip -Dscan=false -pl hadoop-hdds/config,hadoop-ozone/integration-test -Dtest='TestStorageSize,TestConfigFileGenerator,TestOzoneConfigurationFields' -Dsurefire.failIfNoSpecifiedTests=false test > run2.log 2>&1 || true
+      - name: Report
+        run: |
+          echo "### 1st run: surefire cacheability messages"
+          grep -E "Build caching was not enabled for this goal execution because (system property|'.*' was used)" run1.log || echo "(none)"
+          grep -E "Tests run:.*Fail" run1.log | tail -5
+          echo "### 2nd run: surefire outcome"
+          grep -n -E "maven-surefire-plugin.*test \(default-test\)|Loaded from the build cache|FROM-CACHE|Skipping plugin execution \(cached\)" run2.log || true
+          grep -E "Tests run:" run2.log | tail -5 || echo "no tests executed in 2nd run"
